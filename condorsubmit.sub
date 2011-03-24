@@ -1,0 +1,40 @@
+######################
+## Submitting a bunch of singleton files 
+######################
+
+# Keep the universe to "Vanilla"
+Universe		= vanilla
+
+# Use the full directory for your executable
+Executable		=/home/username/treesearch/example.exe 
+
+# The following flags are helpful, 
+# and can be modified per instructions 
+# in the Condor user manual 
+Requirements   =  (Arch == "X86_64")  && OpSys == "LINUX" 
+PeriodicRelease = ((CurrentTime - EnteredCurrentStatus) > 60) && (HoldReasonCode =!= 1)
+OnExitHold = (ExitStatus =!= 0)
+OnExitRemove = (ExitStatus == 0)
+should_transfer_files = YES
+WhenToTransferOutput = ON_EXIT_OR_EVICT
+notification = never
+
+# Set the files for intput/output/error and the log file.
+# It helps to keep a specific folder for each experiment.
+Input			= /home/username/treesearch/data/in.$(Process)
+Output			= /home/username/treesearch/data/out.$(Process)
+Error			= /home/username/treesearch/data/err.$(Process)
+Log  			= /home/username/treesearch/data/log-example.txt
+
+# The arguments are given as 'argv' in the C file.
+# Set the following for each run, depending on need:
+#	run/generate 	(which mode? Are you searching for solutions, or generating new jobs?)
+#	-m [maxdepth]	(change depending on the mode (run or generate))
+#	-k [killtime] 	(try to keep each process to about an hour, depending on group size)
+#	--maxsols [#]	(keep this to a high number unless you only want 1 solution, or have a lot of output per solution)
+#	--maxjobs [#]	(If in generate mode, you may want to limit the number of jobs generated)
+Arguments               = run -m 20 -k 60 --maxsols 1000 --maxjobs 1024 --bits 5 
+ 
+# the variable (QUEUE_SIZE) will be overwritten by the expandjobs script. 
+QUEUE $QUEUE_SIZE  
+
