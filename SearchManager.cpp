@@ -254,6 +254,21 @@ void SearchManager::importArguments(int argc, char** argv)
 				}
 			}
 		}
+		else if ( strcmp("--haltatsols", argv[i]) == 0 )
+		{
+			if ( i < argc - 1 )
+			{
+				if ( strcmp("no", argv[i+1]) == 0 )
+				{
+					this->haltAtSolutions = false;
+				}
+				else
+				{
+					/* default behavior */
+					this->haltAtSolutions = true;
+				} 
+			}
+		}
 		else if ( strcmp("--maxsols", argv[i]) == 0 )
 		{
 			if ( i < argc - 1 )
@@ -856,8 +871,8 @@ char* SearchManager::writeSolution()
 }
 
 /**
- * writeStatistics -- create a buffer that contains a
- * 	description of the solution.
+ * writeStatistics -- create a buffer that contains
+ * 	the custom statistics.
  *
  * Statistics take the following format in each line:
  *

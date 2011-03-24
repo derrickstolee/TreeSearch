@@ -367,8 +367,8 @@ public:
 	virtual char* writeSolution();
 
 	/**
-	 * writeStatistics -- create a buffer that contains a
-	 * 	description of the solution.
+	 * writeStatistics -- create a buffer that contains
+	 *	the custom statistics. 
 	 *
 	 * Statistics take the following format in each line:
 	 *

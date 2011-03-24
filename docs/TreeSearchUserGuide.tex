@@ -19,7 +19,7 @@
 
 \def\TreeSearch{{TreeSearch}}
 
-\title{{\TreeSearch} User Guide\\ {\large Version 1.0}}
+\title{{\TreeSearch} User Guide\\ {\large Version 0.9}}
 
 \author{Derrick Stolee \\ 
 	University of Nebraska-Lincoln\\ 
@@ -254,10 +254,17 @@ Figure \ref{fig:doSearch} describes the actions
 	taken by the recursive \texttt{doSearch()} 
 	method takes at each search node.
 	
+	
+\begin{figure}[h]
+	\centering
+	\parbox{5in}{\Large {\bf INSERT NEW FLOWCHART:} Conceptual order of events in an exhaustive search from root.}
+	\caption{\label{fig:doSearchSmall}The conceptual operation of the \texttt{doSearch()} method.}
+\end{figure}
+	
 \begin{figure}[p]
 	\centering
 	\includegraphics[height=0.95\textheight]{figures/doSearchFlowchart.pdf}
-	\caption{\label{fig:doSearch}The operation of the \texttt{doSearch()} method.}
+	\caption{\label{fig:doSearch}The full operation of the \texttt{doSearch()} method.}
 \end{figure}
 
 \subsection{Virtual Functions}
@@ -269,107 +276,106 @@ Both deepen the search,
 	and control the job descriptions.
 Each returns a child description (of type \texttt{LONG\_T})
 	
+\noindent{\bf \texttt{pushNext()}:}
+	Advance the search stack using the next augmentation available at the current node.
+	Return a label of \texttt{LONG\_T} type which describes the augmentation.
+	Return $-1$ if there are no more augmentations to attempt at this stage,
+		signaling a \texttt{pop()} operation.
 	
+\noindent{\bf \texttt{pushTo(LONG\_T child)}:}
+	Advance the search stack using the augmentation specified by \texttt{child}.
+	If the augmentation fails as specified, return $-1$, and the search will terminate in error.
+	{\bf Note:} If this method is called during the partial portion of a job description,
+		the later augmentations will be called using the \texttt{pushNext()} method,
+		so the current augmentation must be stored for later.
+	
+\noindent{\bf \texttt{pop()}:}
+	Clean up any memory used for the current level
+		and/or revert any data structures to the previous level.
+		
 
-	/**
-	 * pushTo -- deepen the search to the specified child
-	 * 	of the current node.
-	 *
-	 * @param child the specified label for the new node
-	 * @return the label for the new node. -1 if none, or failed.
-	 */
-	virtual LONG\_T pushTo(LONG\_T child);
+\noindent{\bf \texttt{prune()}:}
+	Check if the current node should be pruned 
+		(i.e. detect if there are no solutions 
+			reachable from the current node by performing
+			the specified augmentation).
+	Return $1$ if the node should be pruned, $0$ otherwise.
+	A prune signal will be followed by the \texttt{pop()} method.
 
-	/**
-	 * pop -- remove the current node and move up the tree.
-	 *
-	 * @return the label of the node after the pop.
-	 * 		This return value is used for validation purposes
-	 * 		to check proper implementation of push*() and pop().
-	 */
-	virtual LONG\_T pop();
-
-	/**
-	 * prune -- Perform a check to see if this node should be pruned.
-	 *
-	 * @return 0 if no prune should occur, 1 if prune should occur.
-	 */
-	virtual int prune();
-
-	/**
-	 * isSolution -- Perform a check to see if a solution exists
-	 * 		at this point.
-	 *
-	 * @return 0 if no solution is found, 1 if a solution is found.
-	 */
-	virtual int isSolution();
-
-	/**
-	 * writeSolution -- create a buffer that contains a
-	 * 	description of the solution.
-	 *
-	 * Solution strings start with S.
-	 *
-	 * @return a string of data allocated with malloc().
-	 * 	It will be deleted using free().
-	 */
-	virtual char* writeSolution();
-
-	/**
-	 * writeStatistics -- create a buffer that contains a
-	 * 	description of the solution.
-	 *
-	 * Statistics take the following format in each line:
-	 *
-	 * T [TYPE] [ID] [VALUE]
-	 *
-	 * @return a string of data allocated with malloc().
-	 * 	It will be deleted using free().
-	 */
-	virtual char* writeStatistics();
-
-
-
-
+\noindent{\bf \texttt{isSolution()}:}
+	Check if there is a solution at this node.
+	If there is a solution, store the solution data and return $1$.
+	The \texttt{writeSolution()} method will be called to pass the 
+		solution data to output.
+	If the \texttt{haltAtSolutions} option is set,
+		a solution will trigger a \texttt{pop()} 
+		method.
+	Otherwise, the node will be used for augmentations 
+		until the maximum depth is reached
+		or the \texttt{prune()} method 
+		signals a prune for all later nodes.
+	
+\noindent{\bf \texttt{writeSolution()}:}
+	Return a buffer containing the solution data for the output.
+	This data will be sent to standard out along with
+		the job description of the current node (with an `\texttt{S}' prefix).
+	If your data is prohibitively large for sending over the network,
+		this job description can be used to generate 
+		the current node where the solution data can be recovered.
+	{\bf Note:} The buffer must be allocated using \texttt{malloc},
+		as it will be deallocated using \texttt{free}.
+	
+	
+\noindent{\bf \texttt{writeStatistics()}:}
+	Write a buffer of custom statistics information.
+	Each line must follow the format
+		\begin{center}
+			T [TYPE] [ID] [VALUE]
+		\end{center}
+	where [TYPE] is one of ``SUM", ``MAX", or ``MIN",
+		[ID] is a specified name,
+		and [VALUE] is a number.
+	These statistics are combined by the \texttt{compactjobs} script
+		using the [TYPE] specifier (either sum the values or store the maximum or minimum)
+		and the statistics are placed in the \texttt{allstats.txt} file.
+	The \texttt{combinestats} script converts the \texttt{allstats.txt} file
+		into a comma separated value file, grouping by depth over variables
+		with [ID] of the form [SUBID]\_AT\_[\#].
+	This allows per-depth statistics tracking.
+	
+	
 \subsection{Helper Methods}
 
 The following methods are useful when constructing a {\TreeSearch} application.
 
+\noindent{\bf \texttt{importArguments(int argc, char** argv)}:}
+	Take the command line arguments and set the standard search options.
+	The options from Table \ref{tab:members} such as \texttt{killtime},
+		\texttt{maxJobs}, and \texttt{maxdepth} are all set
+		in this way.
 
-/**
-	 * importArguments -- take the command line arguments
-	 * 	and convert them into options.
-	 *
-	 * This includes the following options:
-	 * 	mode: generate or run
-	 *  stages: -s [count] [s0] [s1] ... [sk]
-	 *  killtime: -k [killtime]
-	 *  maxdepth: -m [maxdepth]
-	 *
-	 *  It is set as virtual so that one can strip
-	 *   custom arguments, if necessary.
-	 */
-	virtual void importArguments(int argc, char** argv);
-
-	/**
-	 * doSearch -- recursively perform the search from the current node.
-	 *
-	 * @return 1 if a solution is found, 0 if not.
-	 */
-	int doSearch();
+\noindent{\bf \texttt{readJob(FILE* file)}:}
+	Read a job from the given input source, such as standard in.
+	It will read only one line,
+		and prepare the manager for the \texttt{doSearch()} method.
 	
+\noindent{\bf \texttt{doSearch()}:}
+	This method starts the search on the current job
+		as well as returns the status of the search:
+		$1$ if completed with a solution,
+		$0$ if completed with no solution,
+		and $-1$ if halted early due to error or time constraints.
 	
-
-
 
 \subsection{Compilation}
 \label{sec:Compilation}
 
 To compile \TreeSearch, run \texttt{make} in the source directory.
-This command compiles the object file \texttt{treesearch.o} which must be
+This command compiles the object file \texttt{SearchManager.o} which must be
 	linked into your executable.
-Your code must reference the header file \texttt{treesearch.h}.
 Moreover, it compiles the example application presented in Section \ref{sec:Example}.
+Your code must reference the header file \texttt{SearchManager.hpp}
+	and link the object file \texttt{SearchManager.o}.
 
 \section{Execution and Job Management}
 \label{sec:Execution}
@@ -390,14 +396,15 @@ However, managing these large lists of jobs requires automation.
 
 When the generation step is run, a list of jobs is presented in a single file.
 Condor requires a separate input and output file for each process.
-The role of the \texttt{expandjobs.py} script is to split the jobs into individual 
+The role of the \texttt{expandjobs} script is to split the jobs into individual 
 	files and to set up the Condor submission file for the number of jobs that are found.
 
 There are a few customizable options for this script.
 
 \begin{itemize}
-	\item \texttt{-f [folder]} -- change the folder where the jobs are created.  Default is \texttt{./jobs}.
-	\item \texttt{-m [maximum]} -- set the maximum number of jobs allowed.  Default is 500.
+	\item \texttt{-f [folder]} -- change the folder where the jobs are created.  Default is \texttt{./}.
+	\item \texttt{-m [maximum]} -- set the maximum number of jobs allowed.  Default is unlimited.
+	\item \texttt{-g [groupsize]} -- set the number of jobs per process. Default is $1$.
 \end{itemize}
 
 Inside the specified folder, the file \texttt{condorsubmit.sub} is set with
@@ -410,7 +417,7 @@ They will be added to the job pool when the jobs are completed.
 Once Condor has completed the requested jobs, the output must be collected to 
 	discover which jobs completed fully, which are partially complete,
 	and how many solutions have been found.
-The script \texttt{compactjobs.py} was built for this purpose.
+The script \texttt{compactjobs} was built for this purpose.
 
 This script takes the output files and reads all new jobs that may have been generated 
 	using the staging feature, finds if the input job completed or is partial,
