@@ -14,7 +14,8 @@
 #include <stdio.h>
 #include <list>
 #include <time.h>
-#include "treesearch.h"
+
+typedef long long int LONG_T;
 
 /**
  * The SearchNode class is used to store data for a
@@ -367,8 +368,8 @@ public:
 	virtual char* writeSolution();
 
 	/**
-	 * writeStatistics -- create a buffer that contains
-	 *	the custom statistics. 
+	 * writeStatistics -- create a buffer that contains a
+	 * 	description of the solution.
 	 *
 	 * Statistics take the following format in each line:
 	 *

@@ -7,26 +7,22 @@
 
 CC=gcc
 CXX=g++
-OFLAGS=-O7
+OFLAGS=-O0 
 # -O0 is for valgrind
 LFLAGS=-g -lm 
 CFLAGS=-g -c -Wall
 CXXFLAGS=-g -c -Wall
-OBJECTS=treesearch.o
+OBJECTS=SearchManager.o
 TARGET=example
-TARGET2=example2
 
 
 
-all: $(TARGET) $(TARGET2)
-
-treesearch.o: treesearch.h treesearch.cpp
-	$(CXX) $(OFLAGS) $(CXXFLAGS) -o treesearch.o treesearch.cpp
+all: $(TARGET) 
 	
 SearchManager.o: SearchManager.hpp SearchManager.cpp
 	$(CXX) $(OFLAGS) $(CXXFLAGS) -o SearchManager.o SearchManager.cpp
 	
-$(TARGET).o: $(TARGET).cpp treesearch.h 
+$(TARGET).o: $(TARGET).cpp
 	$(CXX) $(OFLAGS) $(CXXFLAGS) -o $(TARGET).o $(TARGET).cpp
 		
 $(TARGET): $(OBJECTS) $(TARGET).o

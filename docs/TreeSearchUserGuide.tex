@@ -1,5 +1,6 @@
 \documentclass[11pt]{article}
-\usepackage{times, graphicx,float, multicol}
+\usepackage{times,float, multicol}
+\usepackage[pdftex]{graphicx}
 \usepackage[rflt]{floatflt}
 \usepackage{hyperref}
 
@@ -115,7 +116,7 @@ With the assumption that each subtree is computationally independent of other su
 These path descriptions make up the input for the specific processes in this scheme.
 
 \begin{floatingfigure}{3in}\centering
-	\includegraphics[width=3in]{figures/Jobs.pdf}
+	\includegraphics[width=3in]{figures/Jobs}
 	\caption{\label{fig:jobs}A partial job description.}
 \end{floatingfigure}
 
@@ -257,13 +258,13 @@ Figure \ref{fig:doSearch} describes the actions
 	
 \begin{figure}[h]
 	\centering
-	\parbox{5in}{\Large {\bf INSERT NEW FLOWCHART:} Conceptual order of events in an exhaustive search from root.}
+	\includegraphics[width=0.9\textwidth]{figures/conceptFlowchart}
 	\caption{\label{fig:doSearchSmall}The conceptual operation of the \texttt{doSearch()} method.}
 \end{figure}
 	
 \begin{figure}[p]
 	\centering
-	\includegraphics[height=0.95\textheight]{figures/doSearchFlowchart.pdf}
+	\includegraphics[height=0.95\textheight]{figures/doSearchFlowchart}
 	\caption{\label{fig:doSearch}The full operation of the \texttt{doSearch()} method.}
 \end{figure}
 
@@ -350,7 +351,7 @@ The following methods are useful when constructing a {\TreeSearch} application.
 
 \noindent{\bf \texttt{importArguments(int argc, char** argv)}:}
 	Take the command line arguments and set the standard search options.
-	The options from Table \ref{tab:members} such as \texttt{killtime},
+	The options from Table \ref{tbl:members} such as \texttt{killtime},
 		\texttt{maxJobs}, and \texttt{maxdepth} are all set
 		in this way.
 
@@ -438,54 +439,76 @@ These are collected using the specified type and compiled with existing statisti
 \section{Example Application}
 \label{sec:Example}
 
+An example application is given in the file \texttt{example.cpp}. 
+This example application takes an extra option \texttt{--bits [k]}, 
+	where $k$ is an integer no more than the maximum depth specified ($m$).
+The solutions are the incidence vectors for all subsets of $[m]$
+	which have exactly $k$ elements.
+The augmentation procedure places a $0$ or $1$ in the
+	next bit of the incidence vector, corresponding to the 
+	choice of placing $d$ in the set ($0$ it is out, $1$ it is in)
+	where $d$ is the current depth.
+The \texttt{prune()} method prunes when there are more than $k$ elements selected.
+
+This example should highlight a few nuances when working with the TreeSearch library,
+	specifically how the root node is used to hold the 
+	latest label of the first node,
+	and how the \texttt{SearchNode} class is extended to include 
+	necessary information for the current node
+	so that the \texttt{prune()} and \texttt{isSolution()} 
+	methods do not need to access more than one position in the stack.
 
 
 \section{Example Workflow}
 \label{sec:workflow}
 
-Create submission template
+When managing a distributed search,
+	there are several choices to make as the user.
+What depth should I generate to?
+How many jobs should I run?
+How long should I set the kill time?
+These questions are answered based on your application and
+	experience.
+This section guides you through the use of the management scripts
+	as well as strategies for different situations.
+	
+\subsection{Create the Submission Template}
+
+The file \texttt{condorsubmit.sub} contains the necessary information
+	for submission to the Condor scheduler.
+The number of processes is automatically managed by the \texttt{expandjobs} script.
+However, you may modify the arguments of the run depending on the type of job 
+	you want to run.
+More on this later.
+
+\subsection{Generate initial jobs}
 
 ---->
 
-Generate initial jobs
+\subsection{Compact data}
 
 ---->
 
-Compact data
+\subsection{Evaluate Number of Jobs}
 
 ---->
 
-Evaluate \# of Jobs
+\subsection{Expand Jobs}
 
 ---->
 
-Expand with -M/-G
-
----->
-
+\subsection{Modify Arguments}
 RUN  --OR-- GENERATE (modify the condorsubmit.sub)
 
----->
-
-BACK TO COMPACT
-
-DURING A RUN:
-
-check.sh
-
-AFTER A RUN:
-
-stats.sh/stataccept.txt
-
-
-PREDICTING TIME:
-
-randomjobs.py
 
 
 \section{Summary}
 \label{sec:Summary}
 
+You should now have the necessary information to develop your own applications
+	using the TreeSearch library.
+For support questions or bug reports, please email 	the author at 
+	\href{mailto:s-dstolee1@math.unl.edu}{s-dstolee1@math.unl.edu}.
 
 \section{Acknowledgements}
 

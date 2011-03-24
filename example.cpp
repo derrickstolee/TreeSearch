@@ -1,208 +1,293 @@
 /*
- * runjob.c
+ * example.cpp
  *
- *  Created on: Oct 8, 2009
+ *  Created on: Feb 26, 2010
  *      Author: derrickstolee
  */
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include <math.h>
+#include <stdlib.h>
 #include <time.h>
-#include "treesearch.h"
+#include "SearchManager.hpp"
 
-void example_init(int depth);
-LONG_T example_nextChild(int depth);
-int example_check(int depth);
-void example_cleanup();
+class ExampleNode: public SearchNode
+{
+public:
+	int bits;
 
+	ExampleNode(LONG_T label);
+	ExampleNode(LONG_T label, int parent_bits);
+};
+
+ExampleNode::ExampleNode(LONG_T label) :
+	SearchNode(label)
+{
+	this->bits = (int) label;
+}
+ExampleNode::ExampleNode(LONG_T label, int parent_bits) :
+	SearchNode(label)
+{
+	this->bits = parent_bits + (int) label;
+}
+
+class ExampleManager: public SearchManager
+{
+protected:
+	/**
+	 * k -- the maximum number of 1's in the binary representation.
+	 */
+	int k;
+
+public:
+	ExampleManager(int k);
+	~ExampleManager();
+
+	/**
+	 * pushNext -- deepen the search to the next child
+	 * 	of the current node.
+	 *
+	 * @return the label for the new node. -1 if none.
+	 */
+	virtual LONG_T pushNext();
+
+	/**
+	 * pushTo -- deepen the search to the specified child
+	 * 	of the current node.
+	 *
+	 * @param child the specified label for the new node
+	 * @return the label for the new node. -1 if none, or failed.
+	 */
+	virtual LONG_T pushTo(LONG_T child);
+
+	/**
+	 * pop -- remove the current node and move up the tree.
+	 *
+	 * @return the label of the node after the pop.
+	 * 		This return value is used for validation purposes
+	 * 		to check proper implementation of push*() and pop().
+	 */
+	virtual LONG_T pop();
+
+	/**
+	 * prune -- Perform a check to see if this node should be pruned.
+	 *
+	 * @return 0 if no prune should occur, 1 if prune should occur.
+	 */
+	virtual int prune();
+
+	/**
+	 * isSolution -- Perform a check to see if a solution exists
+	 * 		at this point.
+	 *
+	 * @return 0 if no solution is found, 1 if a solution is found.
+	 */
+	virtual int isSolution();
+};
+
+/**
+ * The main method creates a manager of the derived type,
+ * 	loads the proper arguments,
+ *  reads a job,
+ *  and executes the search.
+ */
 int main(int argc, char** argv)
 {
-	if ( argc < 2 )
+	int k = 0;
+
+	for ( int i = 1; i < argc; i++ )
 	{
-		fprintf(stderr, "Usage: example mode [max_depth]\n");
-		fprintf(stderr, "modes: generate run\n");
-		fprintf(stderr, "\tGenerate requires a max_depth.\n");
-		return 1;
-	}
-
-	int mode = 0;
-
-	if ( strcmp("generate", argv[1]) == 0 )
-	{
-		mode = 1;
-	}
-
-	job_opt options;
-	defaultOptions(&options);
-
-	/* HERE: set the methods to use */
-	options.init = &example_init;
-	options.nextChild = &example_nextChild;
-	options.check = &example_check;
-	options.cleanup = &example_cleanup;
-
-
-	options.stage_num = 4;
-	options.stage_vals = (int*)malloc(options.stage_num * sizeof(int));
-
-	options.stage_vals[0] = 3;
-	options.stage_vals[1] = 6;
-	options.stage_vals[2] = 8;
-	options.stage_vals[3] = 12;
-
-	options.kill_interval = 60L; /* one minute */
-
-	options.max_depth = 16;
-
-	int i = 1;
-	mode = -1;
-
-	while ( i < argc )
-	{
-		if ( strcmp("-k", argv[i]) == 0 )
+		if ( strcmp(argv[i], "--bits") == 0 )
 		{
-			/* -k KILLTIME */
-			if ( i == argc - 1 )
+			if ( i >= argc - 1 )
 			{
-				fprintf(stderr, "Argument -k needs an integer following.\n");
+				printf("Usage: example --bits [k]\n");
 				exit(1);
 			}
 
-			options.kill_interval = atoi(argv[i + 1]);
-			i += 2;
+			k = atoi(argv[i + 1]);
 		}
-		else if ( strcmp("-m", argv[i]) == 0 )
-		{
-			if ( i == argc - 1 )
-			{
-				fprintf(stderr, "Argument -m needs an integer following.\n");
-				exit(1);
-			}
+	}
 
-			options.max_depth = atoi(argv[i + 1]);
-			i += 2;
-		}
-		else if ( strcmp("generate", argv[i]) == 0 )
-		{
-			if ( mode < 0 )
-			{
-				mode = 1; /* GENERATE */
-			}
-			else
-			{
-				printf("Cannot have two modes!\n");
-			}
+	/* Create an instance of the derived SearchManager */
+	ExampleManager* manager = new ExampleManager(k);
 
-			i++;
-		}
-		else if ( strcmp("run", argv[i]) == 0 )
-		{
-			if ( mode < 0 )
-			{
-				mode = 0; /* RUN A JOB */
-			}
-			else
-			{
-				printf("Cannot have two modes!\n");
-			}
+	/* Load arguments such as -k, -m, --maxjobs, --maxsolutions, generate/run */
+	manager->importArguments(argc, argv);
 
-			i++;
-		}
-		else if ( strcmp("-s", argv[i]) == 0 )
-		{
-			if ( i < argc - 1 )
-			{
-				options.stage_num = atoi(argv[i + 1]);
-				options.stage_vals = (int*) malloc(options.stage_num * sizeof(int));
-
-				if ( i + options.stage_num + 1 < argc )
-				{
-					int j = 0;
-					for ( j = 0; j < options.stage_num; j++ )
-					{
-						options.stage_vals[j] = atoi(argv[i + 2 + j]);
-					}
-
-					i += options.stage_num + 2;
-				}
-				else
-				{
-					i++;
-					options.stage_num = -1;
-					free(options.stage_vals);
-				}
-			}
-		}
-		else
-		{
-			/* unrecognized... */
-			printf("Unrecognized argument: %s\n", argv[i]);
-			i++;
-		}
+	/* read jobs from standard in */
+	while ( manager->readJob(stdin) >= 0 )
+	{
+		/* execute each as it goes */
+		manager->doSearch();
 	}
 
 	return 0;
 }
 
-int last_depth = 0;
-int max_depth = 0;
-LONG_T* cur_children = 0;
-
-void example_init(int depth)
+ExampleManager::ExampleManager(int k) :
+	SearchManager()
 {
-	cur_children = (LONG_T*) realloc(cur_children, depth * sizeof(LONG_T));
-	bzero(&cur_children[last_depth], (depth - last_depth) * sizeof(LONG_T));
-	max_depth = depth;
+	this->k = k;
+	this->haltAtSolutions = true;
 }
 
-LONG_T example_nextChild(int depth)
+ExampleManager::~ExampleManager()
 {
-	if ( depth > max_depth )
+
+}
+
+/**
+ * pushNext -- deepen the search to the next child
+ * 	of the current node.
+ *
+ * @return the label for the new node. -1 if none.
+ */
+LONG_T ExampleManager::pushNext()
+{
+	LONG_T label = -1;
+	ExampleNode* parent = 0;
+	if ( this->stack.size() == 0 )
+	{
+		/* we need to make a first level! */
+		if ( this->root != 0 )
+		{
+			delete this->root;
+		}
+		this->root = new ExampleNode(0);
+		label = this->root->curChild + 1;
+		this->root->curChild = label;
+		parent = (ExampleNode*) this->root;
+	}
+	else
+	{
+		/* advance the current child using the current top of the stack */
+		parent = (ExampleNode*) this->stack.back();
+		label = parent->curChild = parent->curChild + 1;
+	}
+
+	/* Here, we are enumerating all binary strings, so we stop for digits >= 2 */
+	if ( label >= 2 )
 	{
 		return -1;
 	}
 
-	if ( depth > last_depth )
+	/* Create a new search node (or derivation) and place it in the stack */
+	ExampleNode* node = new ExampleNode(label, parent->bits);
+	this->stack.push_back(node);
+
+	return label;
+
+}
+
+/**
+ * pushTo -- deepen the search to the specified child
+ * 	of the current node.
+ *
+ * @param child the specified label for the new node
+ * @return the label for the new node. -1 if none, or failed.
+ */
+LONG_T ExampleManager::pushTo(LONG_T child)
+{
+	ExampleNode* parent = 0;
+	if ( this->stack.size() == 0 )
 	{
-		cur_children[depth] = 0;
+		/* we need to make a first level! */
+		if ( this->root != 0 )
+		{
+			delete this->root;
+		}
+		this->root = new ExampleNode(0);
+		this->root->curChild = child;
+		parent = (ExampleNode*) this->root;
 	}
 	else
 	{
-		cur_children[depth]++;
-
-		if ( cur_children[depth] >= 3 )
-		{
-			/* 3 children in total */
-			cur_children[depth] = 0;
-
-			/* -1 means there are no more children here! */
-			return -1;
-		}
+		/* use the specified child */
+		parent = (ExampleNode*) this->stack.back();
+		parent->curChild = child;
 	}
 
-	last_depth = depth;
-	return cur_children[depth];
+	if ( child >= 2 )
+	{
+		/* if we have a mal-formed child, then halt with error */
+		return -1;
+	}
+
+	/* create a new search node for this child */
+	ExampleNode* node = new ExampleNode(child, parent->bits);
+	this->stack.push_back(node);
+
+	return child;
 }
 
-int example_check(int depth)
+/**
+ * pop -- remove the current node and move up the tree.
+ *
+ * @return the label of the node after the pop.
+ * 		This return value is used for validation purposes
+ * 		to check proper implementation of push*() and pop().
+ */
+LONG_T ExampleManager::pop()
 {
-	if ( depth > 9 && (cur_children[depth - 1] % 2) == 0 )
+	if ( this->stack.size() == 0 )
 	{
-		/* a very lame example! */
+		return 0;
+	}
+
+	/* remove the top node from the stack */
+	SearchNode* node = this->stack.back();
+	LONG_T label = (LONG_T) -1;
+	if ( node != 0 )
+	{
+		label = node->label;
+
+		delete node;
+	}
+
+	this->stack.pop_back();
+
+	return label;
+}
+
+/**
+ * prune -- Perform a check to see if this node should be pruned.
+ *
+ * If there are MORE than k 1's, prune.
+ *
+ * @return 0 if no prune should occur, 1 if prune should occur.
+ */
+int ExampleManager::prune()
+{
+	ExampleNode* node = (ExampleNode*) this->stack.back();
+
+	if ( node->bits > k )
+	{
+		/* too many bits! */
 		return 1;
 	}
 
 	return 0;
 }
 
-void example_cleanup()
+/**
+ * isSolution -- Perform a check to see if a solution exists
+ * 		at this point.
+ *
+ * @return 0 if no solution is found, 1 if a solution is found.
+ */
+int ExampleManager::isSolution()
 {
-	if ( cur_children != 0 )
+	if ( this->stack.size() == this->maxDepth )
 	{
-		free(cur_children);
-		cur_children = 0;
-		last_depth = 0;
+		ExampleNode* node = (ExampleNode*) this->stack.back();
+
+		if ( node->bits == k )
+		{
+			/* just the right number of bits */
+			return 1;
+		}
 	}
+
+	return 0;
 }

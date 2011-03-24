@@ -5,11 +5,11 @@
  *      Author: derrickstolee
  */
 
+#include <stdlib.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
 #include <list>
-#include "treesearch.h"
 #include "SearchManager.hpp"
 
 /** SIGNAL HANDLER **/
@@ -258,21 +258,6 @@ void SearchManager::importArguments(int argc, char** argv)
 					this->numStages = 0;
 					this->stages = 0;
 				}
-			}
-		}
-		else if ( strcmp("--haltatsols", argv[i]) == 0 )
-		{
-			if ( i < argc - 1 )
-			{
-				if ( strcmp("no", argv[i+1]) == 0 )
-				{
-					this->haltAtSolutions = false;
-				}
-				else
-				{
-					/* default behavior */
-					this->haltAtSolutions = true;
-				} 
 			}
 		}
 		else if ( strcmp("--maxsols", argv[i]) == 0 )
@@ -524,8 +509,7 @@ int SearchManager::doSearch()
 		}
 		else
 		{
-			this->time_in_search = (search_end_clock - search_start_clock)
-					/ (double) CLOCKS_PER_SEC;
+			this->time_in_search = (search_end_clock - search_start_clock) / (double) CLOCKS_PER_SEC;
 		}
 
 		char* buffer = this->writeStatistics();
@@ -558,8 +542,7 @@ int SearchManager::doSearch()
 		if ( this->searchDepth >= this->maxDepth )
 		{
 			this->numJobsFound = this->numJobsFound + 1;
-			this->deepeningMode = (this->deepeningMode) & ~((int) (DEEPEN_JOB
-					| DEEPEN_PARTIAL));
+			this->deepeningMode = (this->deepeningMode) & ~((int) (DEEPEN_JOB | DEEPEN_PARTIAL));
 
 			if ( this->numJobsFound >= this->maxJobsFound )
 			{
@@ -607,8 +590,7 @@ int SearchManager::doSearch()
 	if ( this->searchDepth >= this->labelSize )
 	{
 		this->labelSize = this->labelSize + 100;
-		this->jobLabels = (LONG_T*) realloc(this->jobLabels, this->labelSize
-				* sizeof(LONG_T));
+		this->jobLabels = (LONG_T*) realloc(this->jobLabels, this->labelSize * sizeof(LONG_T));
 	}
 
 	/* from here on out, we may be recursing */
@@ -622,9 +604,8 @@ int SearchManager::doSearch()
 
 		if ( res != goal )
 		{
-			printf(
-					"--[doSearch] Failed to find child %llX at depth %d, got %llX instead.\n",
-					goal, this->searchDepth, res);
+			printf("--[doSearch] Failed to find child %llX at depth %d, got %llX instead.\n", goal, this->searchDepth,
+					res);
 			exit(1);
 		}
 
@@ -635,23 +616,74 @@ int SearchManager::doSearch()
 		int prune_res = this->prune();
 		clock_t end_c = clock();
 
-		(this->time_in_prune[this->searchDepth]) += (end_c - start_c)
-				/ (double) CLOCKS_PER_SEC;
+		(this->time_in_prune[this->searchDepth]) += (end_c - start_c) / (double) CLOCKS_PER_SEC;
 
 		if ( prune_res == 1 )
 		{
-			printf("--[doSearch] Pruning at child %llX at depth %d.\n", goal,
-					this->searchDepth);
+			printf("--[doSearch] Pruning at child %llX at depth %d.\n", goal, this->searchDepth);
 			exit(1);
 		}
-
-		int sResult = this->doSearch();
-
-		if ( sResult < 0 )
+		else if ( this->isSolution() == 1 )
 		{
-			this->pop();
-			this->searchDepth = this->searchDepth - 1;
-			return sResult;
+			(this->searchDepth)++;
+			this->writeSolutionJob(stdout);
+			char* buffer = this->writeSolution();
+
+			if ( buffer != 0 )
+			{
+				fprintf(stdout, "%s\n", buffer);
+				fflush(stdout);
+				free(buffer);
+			}
+
+			this->foundSolutions = this->foundSolutions + 1;
+
+			if ( this->foundSolutions >= this->maxSolutions )
+			{
+				this->writePartialJob(stdout);
+
+				/* popping the child */
+				this->pop();
+				(this->searchDepth)--;
+				/* popping the current node */
+				this->pop();
+				this->searchDepth = this->searchDepth - 1;
+				return -1;
+			}
+
+			if ( this->haltAtSolutions )
+			{
+				/* popping the child */
+				this->pop();
+				(this->searchDepth)--;
+			}
+			else
+			{
+				/* deepen! */
+
+				int sResult = this->doSearch();
+				/* child popped in search process */
+
+				if ( sResult < 0 )
+				{
+					this->pop();
+					this->searchDepth = this->searchDepth - 1;
+					return sResult;
+				}
+
+				/* otherwise, popped at exit of the mode */
+			}
+		}
+		else
+		{
+			int sResult = this->doSearch();
+
+			if ( sResult < 0 )
+			{
+				this->pop();
+				this->searchDepth = this->searchDepth - 1;
+				return sResult;
+			}
 		}
 
 		/* We don't return here, in case of a partial job */
@@ -684,8 +716,7 @@ int SearchManager::doSearch()
 		int prune_res = this->prune();
 		clock_t end_c = clock();
 
-		(this->time_in_prune[this->searchDepth]) += (end_c - start_c)
-				/ (double) CLOCKS_PER_SEC;
+		(this->time_in_prune[this->searchDepth]) += (end_c - start_c) / (double) CLOCKS_PER_SEC;
 
 		if ( prune_res == 1 )
 		{
@@ -878,8 +909,8 @@ char* SearchManager::writeSolution()
 }
 
 /**
- * writeStatistics -- create a buffer that contains
- * 	the custom statistics.
+ * writeStatistics -- create a buffer that contains a
+ * 	description of the solution.
  *
  * Statistics take the following format in each line:
  *
@@ -935,8 +966,7 @@ char* SearchManager::writeBaseStats()
 	char* buffer = (char*) malloc(buf_len);
 	int cur_loc = 0;
 
-	sprintf(buffer, "T SUM NUM_NODES %lld\nT SUM NUM_PRUNES %lld\n",
-			this->num_nodes, this->num_prunes);
+	sprintf(buffer, "T SUM NUM_NODES %lld\nT SUM NUM_PRUNES %lld\n", this->num_nodes, this->num_prunes);
 
 	cur_loc = strlen(buffer);
 
@@ -950,12 +980,10 @@ char* SearchManager::writeBaseStats()
 			buffer = (char*) realloc(buffer, buf_len);
 		}
 
-		sprintf(&(buffer[cur_loc]), "T SUM PRUNES_AT_%d %lld\n", i,
-				this->prunes_at_level[i]);
+		sprintf(&(buffer[cur_loc]), "T SUM PRUNES_AT_%d %lld\n", i, this->prunes_at_level[i]);
 		cur_loc += strlen(&(buffer[cur_loc]));
 
-		sprintf(&(buffer[cur_loc]), "T SUM PRUNE_TIME_AT_%d %lf\n", i,
-				this->time_in_prune[i]);
+		sprintf(&(buffer[cur_loc]), "T SUM PRUNE_TIME_AT_%d %lf\n", i, this->time_in_prune[i]);
 		cur_loc += strlen(&(buffer[cur_loc]));
 
 		prune_timing += this->time_in_prune[i];
@@ -965,8 +993,7 @@ char* SearchManager::writeBaseStats()
 			break;
 		}
 
-		sprintf(&(buffer[cur_loc]), "T SUM NODES_AT_%d %lld\n", i,
-				this->nodes_at_level[i]);
+		sprintf(&(buffer[cur_loc]), "T SUM NODES_AT_%d %lld\n", i, this->nodes_at_level[i]);
 		cur_loc += strlen(&(buffer[cur_loc]));
 	}
 
