@@ -78,6 +78,9 @@ SearchManager::SearchManager()
 	this->maxJobsFound = 100;
 	this->maxDepth = -1;
 	this->haltAtSolutions = false;
+	this->time_in_prune = 0;
+	this->prunes_at_level = 0;
+	this->nodes_at_level = 0;
 }
 
 /**
@@ -93,6 +96,9 @@ SearchManager::SearchManager(SearchManager& sm)
 	this->foundSolutions = sm.foundSolutions;
 	this->numJobsFound = sm.numJobsFound;
 	this->haltAtSolutions = false;
+	this->time_in_prune = 0;
+	this->prunes_at_level = 0;
+	this->nodes_at_level = 0;
 
 	if ( sm.partialDepth > 0 )
 	{
@@ -562,6 +568,7 @@ int SearchManager::doSearch()
 				this->partialDepth = this->searchDepth;
 				this->writePartialJob(stdout);
 				this->partialDepth = temp;
+
 				this->pop();
 				this->searchDepth = this->searchDepth - 1;
 
@@ -892,6 +899,19 @@ char* SearchManager::writeStatistics()
 void SearchManager::initBaseStats()
 {
 	this->num_nodes = 0;
+	if ( this->nodes_at_level != 0 )
+	{
+		free(this->nodes_at_level);
+	}
+	if ( this->prunes_at_level != 0 )
+	{
+		free(this->prunes_at_level);
+	}
+	if ( this->time_in_prune != 0 )
+	{
+		free(this->time_in_prune);
+	}
+
 	this->nodes_at_level = (LONG_T*) malloc(this->maxDepth * sizeof(LONG_T));
 	this->num_prunes = 0;
 	this->prunes_at_level = (LONG_T*) malloc(this->maxDepth * sizeof(LONG_T));
@@ -924,7 +944,7 @@ char* SearchManager::writeBaseStats()
 
 	for ( int i = 0; i < this->maxDepth; i++ )
 	{
-		if ( cur_loc >= buf_len - 200 )
+		if ( cur_loc >= buf_len - 500 )
 		{
 			buf_len += 5000;
 			buffer = (char*) realloc(buffer, buf_len);
