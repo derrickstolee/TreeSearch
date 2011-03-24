@@ -408,8 +408,9 @@ There are a few customizable options for this script.
 	\item \texttt{-g [groupsize]} -- set the number of jobs per process. Default is $1$.
 \end{itemize}
 
-Inside the specified folder, the file \texttt{condorsubmit.sub} is set with
-	the proper folder and queue size based on the number of jobs found.
+Inside the specified folder, the file \texttt{condorsubmit.sub.tmp} is modified
+	and copied to \texttt{condorsubmit.sub} with
+	the proper queue size based on the number of jobs found.
 Any remaining jobs that did not fit within the maximum are held as back jobs.
 They will be added to the job pool when the jobs are completed.
 
@@ -483,24 +484,110 @@ More on this later.
 
 \subsection{Generate initial jobs}
 
----->
+To create a beginning list of jobs, 
+	run a single process in \texttt{generate} mode
+	with a reasonably small maximum depth.
+Send the output to a file called ``\texttt{out.0}" in order
+	to have it viewed by the \texttt{compactjobs} script.
+To start at the root search node, use the job description ``\texttt{J 0 0}".
+The jobs created could be reasonably small.
 
 \subsection{Compact data}
 
----->
+After any run, use the \texttt{compactjobs} script to
+	combine the list of results, partial jobs, and new jobs
+	from the output files into a collection of data files.
+This will also give you the number of jobs which completed, failed,
+	are partial,
+	or are new.
 
 \subsection{Evaluate Number of Jobs}
 
----->
+Based on this number of jobs, you have a few options.
 
-\subsection{Expand Jobs}
+\begin{enumerate}
+	\item You have a lot of jobs ($\geq 20,000$ for instance).
+		This is probably too many to run each job as a single process, 
+			so they must be grouped together.
+		When using the \texttt{expandjobs} script, use the \texttt{-g} flag
+			to group jobs together into processes, so that
+			there are a reasonable number of total processes.
+		For example, if there were $100,000$ jobs, using
+			\texttt{expandjobs -g 10} would result in a list of $10,000$ processes.
+		After running \texttt{expandjobs}, modify the generated
+			\texttt{condorsubmit.sub} script
+			to set the killtime so that all of the jobs in the process
+			can complete.
+		For example, if I want to run the previous list of $10,000$ processes
+			for an hour each, I want to set the per-job killtime to six minutes,
+			or 360 seconds.
+			
+		Hopefully, many of your processes will complete in this short time interval,
+			and you can run the remaining processes for a longer period.
+		If this does not occur, and you still have many jobs remaining,
+			perhaps using the \texttt{-m} flag on the \texttt{expandjobs} script
+			to bound the total number of jobs will allow fewer jobs per process
+			while storing the remaining jobs for execution later.
+					
+	\item You have a decent number of jobs (between $2,500$ and $20,000$).
+		This is a good number for running each as an individual process.
+		Running \texttt{expandjobs} with no grouping will allow a 
+			bijection between processes and jobs.
+		Modifying the generated \texttt{condorsubmit.sub} file
+			for a per-process killtime of one hour (3600 seconds) 
+			will allow a reasonable amount of computation per job.
+	
+	
+	\item You have very few jobs (below $2,500$) 
+			which did not terminate in an hour of computation.
+		 With the number of jobs, just repeating another hour-per-job submission
+		 	will not take full advantage of parallelism.
+		Use the \texttt{expandjobs} script (possibly with grouping)
+			to generate a list of input files for your jobs.
+		Modify the \texttt{condorsubmit.sub} script to 
+			be in \texttt{generate} mode with a maximum depth beyond your
+			current job-depth.
+		Depending on the density of your application's branching, this could
+			be between one to ten or more levels beyond the current job depth.
+		It is usually a good goal to create a large number ($\geq 20,000$)
+			of jobs which can be run with grouping at a small computation time
+			in order to quickly remove small subtrees of the search.
+		This hopefully isolates the ``hard cases" 
+			that kept the current list of jobs from completing.
+		
+\end{enumerate}
 
----->
+\subsection{Submit Script}
 
-\subsection{Modify Arguments}
-RUN  --OR-- GENERATE (modify the condorsubmit.sub)
+Using the \texttt{condor\_submit} script, submit the processes
+	using the \texttt{condorsubmit.sub} submission script.
+Now, wait for the processes to complete.
+You can monitor progress by using two Condor commands:
+	\begin{enumerate}
+		\item \texttt{condor\_status -submitters} will give you a list 
+					of running/idle/held jobs for each submitter. 
+					This is a good way to watch your queue when many jobs are running.
+		\item \texttt{condor\_q [-submitter username]} or \texttt{condor\_q [clusterid]}
+				will return a per-process list of run times, statuses, 
+				and other useful information.
+				This is not recommended when there are many processes running, 
+					but when there are less than 100 processes,
+					this can help to find processes that are not completing
+					or when you should expect the processes to complete.
+				Use the \texttt{-currentrun} flag to 
+					see how long the processes have run since their
+					last eviction or suspension.
+	\end{enumerate}	
 
-
+If the above methods are not telling you the information you want,
+	view the tail of the log file (as specified in your submission script).
+This contains the most up-to-date information including
+	the amount of memory each process is using
+	and the reasons for evictions or other failures.
+	
+If your processes are not completing, or you have found that
+	you incorrectly set the submission script, 
+	remove the jobs using the \texttt{condor\_rm [clusterid]} command.
 
 \section{Summary}
 \label{sec:Summary}
