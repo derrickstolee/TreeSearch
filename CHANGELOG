@@ -1,0 +1,19 @@
+######################################
+# TreeSearch Change Log              #
+######################################
+
+
+
+######################################
+03-31-2011
+Derrick Stolee
+
+Modified: SearchManager.cpp
+
+Added feature: when generating jobs
+from a partial job, the first
+job listed includes the full
+partial description with a modified
+job depth.
+
+######################################

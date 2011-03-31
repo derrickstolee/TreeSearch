@@ -1,9 +1,11 @@
 \documentclass[11pt]{article}
+\usepackage{setspace}
+\doublespacing
+
 \usepackage{times,float, multicol}
 \usepackage[pdftex]{graphicx}
 \usepackage[rflt]{floatflt}
 \usepackage{hyperref}
-
 
 \setlength{\textwidth}{6.5in}
 \setlength{\textheight}{9.0in}
@@ -13,10 +15,6 @@
 
 \newcommand{\secref}[1]{Section~\ref{#1}}
 
-\newcommand{\doublespace}{\baselineskip0.34truein}
-\newcommand{\singlespace}{\baselineskip0.16truein}
-\newcommand{\midspace}{\baselineskip0.24truein}
-\newcommand{\midplusspace}{\baselineskip0.26truein}
 
 \def\TreeSearch{{TreeSearch}}
 
@@ -54,6 +52,9 @@ For a search of this type, all search nodes at a given depth
 Each of the subtrees at this depth can be run independently,
 	and hence it is common to run these jobs concurrently 
 	(See \cite{ClassificationAlgorithms} Chapter 5 for more information).
+Since the subtrees are independent, no communication is necessary for 
+	these jobs, and the jobs can be run on a distributed machine 
+	such as a cluster or grid.
 
 The {\TreeSearch} library was built to maximize code reuse for these types of search.
 It abstracts the structure of the tree and the recursive nature of the search into
@@ -64,7 +65,7 @@ Then, the ability to generate a list of jobs, run individual jobs, and submit th
 {\TreeSearch} is intended for execution 
 	on a distributed machine using
 	Condor \cite{condor-practice},
-	a job scheduler that uses idle nodes of a cluster or network.
+	a job scheduler that uses idle nodes of a cluster or grid.
 Condor was chosen as its original development was meant for
 	installation in computer labs and office machines 
 	at the University of Wisconsin--Madison
@@ -93,7 +94,7 @@ Let us begin by describing the general structure and process of an abstract
 There is a unique root node at depth zero.
 Each node in the tree searches in a depth-first, recursive manner.
 There are a number of children to select at each node.
-One may select this child through iteration or selecting via a numerical order.
+One may select this child through iteration or selecting via a numerical label.
 Before searching below the child, a pruning procedure may be called to attempt to 
 	rule out the possibility of a solution below that child.
 Another procedure may be used to find if this node is a solution.
@@ -110,7 +111,7 @@ Typically, the breadth of the search will be small and these descriptions take v
 This allows for a method of describing a search node independently of 
 	what data is actually stored by the specific search application.
 Moreover, the application may require visiting the ancestor search nodes in order
-	to have consistent data.
+	to have consistent internal data.
 With the assumption that each subtree is computationally independent of other subtrees at the same level,
 	one can run each subtree in a different process in order to achieve parallelization.
 These path descriptions make up the input for the specific processes in this scheme.

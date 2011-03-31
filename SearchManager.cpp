@@ -557,6 +557,20 @@ int SearchManager::doSearch()
 
 				return -1;
 			}
+			else if ( this->numJobsFound == 1 && this->jobDepth < this->partialDepth )
+			{
+				/* we had a partial job, and this is the FIRST job */
+				/* we should output a partial job with a modified jobDepth */
+				int tjd = this->jobDepth;
+				int tsd = this->searchDepth;
+				this->jobDepth = this->searchDepth;
+				this->searchDepth = this->partialDepth;
+
+				this->writePartialJob(stdout);
+
+				this->jobDepth = tjd;
+				this->searchDepth = tsd;
+			}
 			else
 			{
 				this->writeJob(stdout);
