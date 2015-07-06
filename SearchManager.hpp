@@ -1,3 +1,24 @@
+/***********************************************************
+
+Copyright Derrick Stolee 2011.
+
+ This file is part of SearchLib.
+
+    SearchLib is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SearchLib is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with SearchLib.  If not, see <http://www.gnu.org/licenses/>.
+
+*************************************************************/
+
 /*
  * SearchManager.hpp
  *
@@ -195,25 +216,12 @@ protected:
 	 */
 	LONG_T num_nodes;
 
-	/**
-	 * nodes_at_level -- the nodes at each depth
-	 */
-	LONG_T* nodes_at_level;
 
 	/**
 	 * num_prunes -- total number of pruning
 	 */
 	LONG_T num_prunes;
 
-	/**
-	 * prunes_at_level -- the number of prunes that occur at each depth
-	 */
-	LONG_T* prunes_at_level;
-
-	/**
-	 * time_in_prune -- the amount of time spent in the prune operation (by level)
-	 */
-	double* time_in_prune;
 
 	/**
 	 * total time
@@ -276,6 +284,7 @@ public:
 	 * @param file The input stream.
 	 */
 	int readJob(FILE* file);
+	void loadEmptyJob();
 
 
 	/**
