@@ -1,0 +1,23 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Acquiring TreeSearch}{section.1}% 2
+\BOOKMARK [1][-]{section.2}{Strategy}{}% 3
+\BOOKMARK [2][-]{subsection.2.1}{Subtrees as Jobs}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.2}{Job Descriptions}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.3}{Customization}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{Integration with TreeSearch}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{Virtual Functions}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.2}{Helper Methods}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.3}{Compilation}{section.3}% 10
+\BOOKMARK [1][-]{section.4}{Execution and Job Management}{}% 11
+\BOOKMARK [2][-]{subsection.4.1}{Management Scripts}{section.4}% 12
+\BOOKMARK [3][-]{subsubsection.4.1.1}{Expanding jobs before a run}{subsection.4.1}% 13
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Collecting data after a run}{subsection.4.1}% 14
+\BOOKMARK [1][-]{section.5}{Example Application}{}% 15
+\BOOKMARK [1][-]{section.6}{Example Workflow}{}% 16
+\BOOKMARK [2][-]{subsection.6.1}{Create the Submission Template}{section.6}% 17
+\BOOKMARK [2][-]{subsection.6.2}{Generate initial jobs}{section.6}% 18
+\BOOKMARK [2][-]{subsection.6.3}{Compact data}{section.6}% 19
+\BOOKMARK [2][-]{subsection.6.4}{Evaluate Number of Jobs}{section.6}% 20
+\BOOKMARK [2][-]{subsection.6.5}{Submit Script}{section.6}% 21
+\BOOKMARK [1][-]{section.7}{Summary}{}% 22
+\BOOKMARK [1][-]{section.8}{Acknowledgements}{}% 23
