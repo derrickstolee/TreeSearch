@@ -99,7 +99,6 @@ SearchManager::SearchManager()
 	this->num_nodes = 0;
 	this->end_time = 0;
 	this->partialDepth = 0;
-	this->checkOnlyLast = 0;
 	this->labelSize = 0;
 	this->deepeningMode = 0;
 	this->time_in_search = 0;
@@ -118,7 +117,7 @@ SearchManager::SearchManager()
  */
 SearchManager::SearchManager(SearchManager& sm)
 {
-	unsigned int i;
+	int i;
 	this->root = new SearchNode(0);
 	this->jobDepth = sm.jobDepth;
 	this->partialDepth = sm.partialDepth;
@@ -141,7 +140,6 @@ SearchManager::SearchManager(SearchManager& sm)
 	this->killtime = sm.killtime;
 	this->end_time = sm.end_time;
 	this->deepeningMode = sm.deepeningMode;
-	this->checkOnlyLast = sm.checkOnlyLast;
 	this->maxDepth = sm.maxDepth;
 
 	this->numStages = sm.numStages;
@@ -531,7 +529,7 @@ int SearchManager::doSearch()
 		/* check the partial depth and find the stage, if necessary */
 		if ( this->numStages > 0 )
 		{
-			unsigned int i;
+			int i;
 			for ( i = 0; i < this->numStages; i++ )
 			{
 				if ( this->stages[i] > this->partialDepth )
@@ -687,9 +685,7 @@ int SearchManager::doSearch()
 
 		(this->num_nodes)++;
 
-		clock_t start_c = clock();
 		int prune_res = this->prune();
-		clock_t end_c = clock();
 
 		if ( prune_res == 1 )
 		{
@@ -788,9 +784,7 @@ int SearchManager::doSearch()
 	{
 		(this->num_nodes)++;
 
-		clock_t start_c = clock();
 		int prune_res = this->prune();
-		clock_t end_c = clock();
 
 		if ( prune_res == 1 )
 		{

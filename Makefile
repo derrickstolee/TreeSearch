@@ -7,31 +7,44 @@
 
 CC=gcc
 CXX=g++
-OFLAGS=-O0 
-# -O0 is for valgrind
+OFLAGS=-O3
 LFLAGS=-g -lm 
-CFLAGS=-g -c -Wall
-CXXFLAGS=-g -c -Wall
+CFLAGS=-g -c -Wall -Werror
+CXXFLAGS=-g -c -Wall -Werror
 OBJECTS=SearchManager.o
-TARGET=example
+TARGETS=example.exe
 
+.SUFFIXES: .c .cpp .o .obj .exe 
 
+all: $(OBJECTS) $(TARGETS)
 
-all: $(TARGET) 
+# The default object compiler
+.c.o: $<
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.cpp.o: $<
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.cpp.exe: $< $(OBJECTS) 
+	$(CXX) $(LFLAGS)						\
+	$(OBJECTS)				    	   			\
+	$< -o $@
+
+.c.exe: $< $(COBJECTS)
+	$(CC) 	$(LFLAGS)	$(DEBUG)		    						\			
+	$< -o $@
+
+clean:
+	-@rm $(OBJECTS) $(TARGETS) $(TESTS)
 	
-SearchManager.o: SearchManager.hpp SearchManager.cpp
-	$(CXX) $(OFLAGS) $(CXXFLAGS) -o SearchManager.o SearchManager.cpp
-	
-$(TARGET).o: $(TARGET).cpp
-	$(CXX) $(OFLAGS) $(CXXFLAGS) -o $(TARGET).o $(TARGET).cpp
-		
-$(TARGET): $(OBJECTS) $(TARGET).o
-	$(CXX) $(OFLAGS) $(LFLAGS) -o $(TARGET) $(TARGET).o $(OBJECTS)
-	
-$(TARGET2): SearchManager.o $(TARGET2).o
-	$(CXX) $(OFLAGS) $(LFLAGS) -o $(TARGET2) $(TARGET2).o SearchManager.o
-	
-clean: 
-	rm $(TARGET) $(TARGET).o $(OBJECTS) $(TARGET2) $(TARGET2).o SearchManager.o
-	
-rebuild: clean all
+cleanexe:
+	-@rm $(TARGETS)
+
+cleantest:
+	-@rm $(TESTS)
+
+clest:
+	-@rm $(TESTS)
+
+clexe:
+	-@rm $(TARGETS)

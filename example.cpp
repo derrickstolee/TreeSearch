@@ -279,7 +279,7 @@ int ExampleManager::prune()
  */
 int ExampleManager::isSolution()
 {
-	if ( this->stack.size() == this->maxDepth )
+	if ( this->stack.size() == (unsigned int)this->maxDepth )
 	{
 		ExampleNode* node = (ExampleNode*) this->stack.back();
 

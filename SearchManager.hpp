@@ -105,12 +105,12 @@ protected:
 	/**
 	 * jobDepth -- the depth for the job node.
 	 */
-	unsigned int jobDepth;
+	int jobDepth;
 
 	/**
 	 * partialDepth -- the depth for the partial node.
 	 */
-	unsigned int partialDepth;
+	int partialDepth;
 
 	/**
 	 * maxSolutions -- the  maximum number of solutions wanted.
@@ -177,7 +177,7 @@ protected:
 	 *
 	 * This is used instead of stages if stages are not set.
 	 */
-	unsigned int maxDepth;
+	int maxDepth;
 
 	/**
 	 * numStages -- the number of stages in the search.
@@ -186,7 +186,7 @@ protected:
 	 * 	search node is output as another job instead of
 	 *  deepening further.
 	 */
-	unsigned int numStages;
+    int numStages;
 
 	/**
 	 * stages -- the list of stage values.
@@ -196,12 +196,6 @@ protected:
 	 * splits jobs that reach level 10.
 	 */
 	int* stages;
-
-	/**
-	 * checkOnlyLast -- an option flag specifying
-	 *  if the
-	 */
-	unsigned int checkOnlyLast;
 
 	/**
 	 * searchDepth -- the current depth of the search.
